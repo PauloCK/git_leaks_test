@@ -1,9 +1,61 @@
 title = "Gitleaks custom configuration"
 
+# Extend the base Gitleaks configuration to keep all built-in rules
+[extend]
+useDefault = true
+
+# Add custom rules for patterns not covered by default Gitleaks rules
+
 [[rules]]
 id = "hardcoded-generic-password"
 description = "Detects hardcoded passwords assigned to a variable."
-# This simplified regex matches 'password = ' followed by anything in quotes.
-# We use .* to match any sequence of characters.
-regex = '''password\s*=\s*['"].*['"]'''
-tags = ["password", "hardcoded"]
+regex = '''(?i)(password|passwd|pwd)\s*=\s*['"][^'"]{3,}['"]'''
+tags = ["password", "hardcoded", "custom"]
+[rules.allowlist]
+regexes = [
+  '''(?i)(password|passwd|pwd)\s*=\s*['"](test|demo|example|placeholder|your_|xxx|changeme|password123)['"''',
+]
+
+[[rules]]
+id = "hardcoded-database-password"
+description = "Detects database password assignments."
+regex = '''(?i)(db_password|database_password|mysql_password|postgres_password|mongodb_password)\s*=\s*['"][^'"]{3,}['"]'''
+tags = ["database", "password", "custom"]
+
+[[rules]]
+id = "hardcoded-connection-string"
+description = "Detects database connection strings with embedded credentials."
+regex = '''(?i)(connection_string|conn_string|database_url|db_url)\s*=\s*['"].*://[^:]+:[^@]+@.*['"]'''
+tags = ["database", "connection-string", "custom"]
+
+[[rules]]
+id = "hardcoded-secret-key"
+description = "Detects secret key assignments that might be missed by default rules."
+regex = '''(?i)(secret_key|secretkey|app_secret)\s*=\s*['"][a-zA-Z0-9_\-]{10,}['"]'''
+tags = ["secret", "hardcoded", "custom"]
+
+[[rules]]
+id = "hardcoded-encryption-key"
+description = "Detects encryption key assignments."
+regex = '''(?i)(encryption_key|encryptionkey|cipher_key)\s*=\s*['"][a-zA-Z0-9+/=]{16,}['"]'''
+tags = ["encryption", "key", "custom"]
+
+# Global allowlist to reduce false positives across all rules
+[allowlist]
+description = "Global allowlist for common false positives"
+paths = [
+  '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
+  '''(go|py)-lock\.(json|yaml)$''',
+  '''^\.gitleaks\.toml$''',
+  '''\.example$''',
+  '''\.sample$''',
+  '''\.template$''',
+  '''^tests/fixtures/''',
+  '''^examples/''',
+  '''^docs/''',
+]
+regexes = [
+  '''(?i)(example|sample|test|demo|dummy|placeholder|fake|mock)''',
+  '''password\s*=\s*['"]\*+['"]''',
+  '''password\s*=\s*['"]\.+['"]''',
+]

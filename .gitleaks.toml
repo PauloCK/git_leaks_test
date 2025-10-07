@@ -5,5 +5,5 @@ id = "hardcoded-generic-password"
 description = "Detects hardcoded passwords assigned to a variable."
 # This simplified regex matches 'password = ' followed by anything in quotes.
 # We use .* to match any sequence of characters.
-regex = '''(?i)password\s*=\s*['"].*['"]'''
+regex = '''password\s*=\s*['"].*['"]'''
 tags = ["password", "hardcoded"]

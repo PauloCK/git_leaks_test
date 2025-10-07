@@ -9,7 +9,7 @@ useDefault = true
 [[rules]]
 id = "hardcoded-generic-password"
 description = "Detects hardcoded passwords assigned to a variable."
-regex = '''(?i)(?:password|passwd|pwd)\s*=\s*['"'](.+?)['"]'''
+regex = '''(?i)(?:password|passwd|pwd)\s*=\s*["'](.+?)["']'''
 secretGroup = 1
 tags = ["password", "hardcoded", "custom"]
 [rules.allowlist]
@@ -20,7 +20,7 @@ regexes = [
 [[rules]]
 id = "hardcoded-database-password"
 description = "Detects database password assignments."
-regex = '''(?i)(?:db_password|database_password|mysql_password|postgres_password|mongodb_password)\s*=\s*['"'](.+?)['"]'''
+regex = '''(?i)(?:db_password|database_password|mysql_password|postgres_password|mongodb_password)\s*=\s*["'](.+?)["']'''
 secretGroup = 1
 tags = ["database", "password", "custom"]
 

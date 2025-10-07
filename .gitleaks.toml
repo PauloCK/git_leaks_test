@@ -1,0 +1,8 @@
+title = "Gitleaks custom configuration"
+
+[[rules]]
+id = "hardcoded-password"
+description = "Detects simple hardcoded passwords assigned to a variable."
+# This regex looks for 'password = "..."' or 'password = '...' (case-insensitive)
+regex = '''(?i)password\s*=\s*['"][a-zA-Z0-9!@#$%^&*()_+-=]{8,}['"]'''
+tags = ["password", "hardcoded"]

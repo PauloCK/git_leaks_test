@@ -9,35 +9,40 @@ useDefault = true
 [[rules]]
 id = "hardcoded-generic-password"
 description = "Detects hardcoded passwords assigned to a variable."
-regex = '''(?i)(password|passwd|pwd)\s*=\s*['"][^'"]{3,}['"]'''
+regex = '''(?i)(?:password|passwd|pwd)\s*=\s*['"'](.+?)['"]'''
+secretGroup = 1
 tags = ["password", "hardcoded", "custom"]
 [rules.allowlist]
 regexes = [
-  '''(?i)(password|passwd|pwd)\s*=\s*["'](test|demo|example|placeholder|your_|xxx|changeme|password123)["']''',
+  '''(?i)(?:password|passwd|pwd)\s*=\s*["'](test|demo|example|placeholder|your_|xxx|changeme|password123)["']''',
 ]
 
 [[rules]]
 id = "hardcoded-database-password"
 description = "Detects database password assignments."
-regex = '''(?i)(db_password|database_password|mysql_password|postgres_password|mongodb_password)\s*=\s*['"][^'"]{3,}['"]'''
+regex = '''(?i)(?:db_password|database_password|mysql_password|postgres_password|mongodb_password)\s*=\s*['"'](.+?)['"]'''
+secretGroup = 1
 tags = ["database", "password", "custom"]
 
 [[rules]]
 id = "hardcoded-connection-string"
 description = "Detects database connection strings with embedded credentials."
-regex = '''(?i)(connection_string|conn_string|database_url|db_url)\s*=\s*['"].*://[^:]+:[^@]+@.*['"]'''
+regex = '''(?i)(?:connection_string|conn_string|database_url|db_url)\s*=\s*['"'](.*://[^:]+:)([^@]+)(@.*)['"]'''
+secretGroup = 2
 tags = ["database", "connection-string", "custom"]
 
 [[rules]]
 id = "hardcoded-secret-key"
 description = "Detects secret key assignments that might be missed by default rules."
-regex = '''(?i)(secret_key|secretkey|app_secret)\s*=\s*['"][a-zA-Z0-9_\-]{10,}['"]'''
+regex = '''(?i)(?:secret_key|secretkey|app_secret)\s*=\s*['"']([a-zA-Z0-9_\-]{10,})['"]'''
+secretGroup = 1
 tags = ["secret", "hardcoded", "custom"]
 
 [[rules]]
 id = "hardcoded-encryption-key"
 description = "Detects encryption key assignments."
-regex = '''(?i)(encryption_key|encryptionkey|cipher_key)\s*=\s*['"][a-zA-Z0-9+/=]{16,}['"]'''
+regex = '''(?i)(?:encryption_key|encryptionkey|cipher_key)\s*=\s*['"']([a-zA-Z0-9+/=]{16,})['"]'''
+secretGroup = 1
 tags = ["encryption", "key", "custom"]
 
 # Global allowlist to reduce false positives across all rules
@@ -56,6 +61,6 @@ paths = [
 ]
 regexes = [
   '''(?i)(example|sample|test|demo|dummy|placeholder|fake|mock)''',
-  '''password\s*=\s*['"]\*+['"]''',
-  '''password\s*=\s*['"]\.+['"]''',
+  '''password\s*=\s*["']\*+["']''',
+  '''password\s*=\s*["']\.+["']''',
 ]

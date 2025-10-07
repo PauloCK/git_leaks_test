@@ -13,7 +13,7 @@ regex = '''(?i)(password|passwd|pwd)\s*=\s*['"][^'"]{3,}['"]'''
 tags = ["password", "hardcoded", "custom"]
 [rules.allowlist]
 regexes = [
-  '''(?i)(password|passwd|pwd)\s*=\s*['"](test|demo|example|placeholder|your_|xxx|changeme|password123)['"''',
+  '''(?i)(password|passwd|pwd)\s*=\s*["'](test|demo|example|placeholder|your_|xxx|changeme|password123)["']''',
 ]
 
 [[rules]]

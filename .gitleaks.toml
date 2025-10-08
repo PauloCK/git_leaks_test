@@ -52,6 +52,84 @@ regex = '''(?i)(?:encryption_key|encryptionkey|cipher_key)\s*=\s*['"']([a-zA-Z0-
 secretGroup = 1
 tags = ["encryption", "key", "custom"]
 
+# Override default Sidekiq rule to add allowlist for false positives
+[[rules]]
+id = "sidekiq-secret"
+description = "Sidekiq Secret (with false positive filtering)"
+regex = '''(?i)BUNDLE_ENTERPRISE__CONTRIBSYS__COM\s*[:=]\s*['"]?([0-9a-f]{8}:[0-9a-f]{8})['"]?'''
+secretGroup = 1
+tags = ["sidekiq", "secret"]
+[rules.allowlist]
+paths = [
+  '''README\.md
+[allowlist]
+description = "Global allowlist for common false positives"
+
+# Paths to exclude from scanning
+paths = [
+  '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
+  '''(go|py)-lock\.(json|yaml)$''',
+  '''^\.gitleaks\.toml$''',
+  '''\.example$''',
+  '''\.sample$''',
+  '''\.template$''',
+  '''^tests/fixtures/''',
+  '''^examples/''',
+  '''^docs/''',
+]
+
+# Regex patterns to exclude (be careful with these - they apply globally)
+regexes = [
+  # Exclude obvious placeholders with asterisks or dots
+  '''password\s*=\s*["']\*+["']''',
+  '''password\s*=\s*["']\.+["']''',
+  # Exclude false positive Sidekiq detections
+  '''BUNDLE_ENTERPRISE__CONTRIBSYS__COM''',
+]
+
+# Stopwords to ignore (case-insensitive partial matches)
+stopwords = [
+  "BUNDLE_ENTERPRISE",
+  "CONTRIBSYS",
+]
+'',
+  '''\.github/workflows/.*\.yml
+[allowlist]
+description = "Global allowlist for common false positives"
+
+# Paths to exclude from scanning
+paths = [
+  '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
+  '''(go|py)-lock\.(json|yaml)$''',
+  '''^\.gitleaks\.toml$''',
+  '''\.example$''',
+  '''\.sample$''',
+  '''\.template$''',
+  '''^tests/fixtures/''',
+  '''^examples/''',
+  '''^docs/''',
+]
+
+# Regex patterns to exclude (be careful with these - they apply globally)
+regexes = [
+  # Exclude obvious placeholders with asterisks or dots
+  '''password\s*=\s*["']\*+["']''',
+  '''password\s*=\s*["']\.+["']''',
+  # Exclude false positive Sidekiq detections
+  '''BUNDLE_ENTERPRISE__CONTRIBSYS__COM''',
+]
+
+# Stopwords to ignore (case-insensitive partial matches)
+stopwords = [
+  "BUNDLE_ENTERPRISE",
+  "CONTRIBSYS",
+]
+'',
+]
+regexes = [
+  '''BUNDLE_ENTERPRISE__CONTRIBSYS__COM''',
+]
+
 # Global allowlist to reduce false positives across all rules
 [allowlist]
 description = "Global allowlist for common false positives"
@@ -74,4 +152,12 @@ regexes = [
   # Exclude obvious placeholders with asterisks or dots
   '''password\s*=\s*["']\*+["']''',
   '''password\s*=\s*["']\.+["']''',
+  # Exclude false positive Sidekiq detections
+  '''BUNDLE_ENTERPRISE__CONTRIBSYS__COM''',
+]
+
+# Stopwords to ignore (case-insensitive partial matches)
+stopwords = [
+  "BUNDLE_ENTERPRISE",
+  "CONTRIBSYS",
 ]

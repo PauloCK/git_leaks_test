@@ -7,20 +7,27 @@ useDefault = true
 # Add custom rules for patterns not covered by default Gitleaks rules
 
 [[rules]]
+id = "aws-access-key-assignment"
+description = "Detects AWS access keys assigned to variables, including in comments."
+regex = '''(?i)aws_access_key[_\s]*=\s*["']([A-Za-z0-9!@#$%^&*()_+\-=\[\]{};:,.<>?/\\|`~]+)["']'''
+secretGroup = 1
+tags = ["aws", "access-key", "custom"]
+
+[[rules]]
 id = "hardcoded-generic-password"
 description = "Detects hardcoded passwords assigned to a variable."
-regex = '''(?i)(?:password|passwd|pwd)\s*=\s*["'](.+?)["']'''
+regex = '''(?i)(?:password|passwd|pwd)\s*=\s*["'](.{6,})["']'''
 secretGroup = 1
 tags = ["password", "hardcoded", "custom"]
 [rules.allowlist]
 regexes = [
-  '''(?i)(?:password|passwd|pwd)\s*=\s*["'](test|demo|example|placeholder|your_|xxx|changeme|password123)["']''',
+  '''(?i)(?:password|passwd|pwd)\s*=\s*["'](test|demo|example|placeholder|your_|xxx|changeme|password123|\*+|\.+)["']''',
 ]
 
 [[rules]]
 id = "hardcoded-database-password"
 description = "Detects database password assignments."
-regex = '''(?i)(?:db_password|database_password|mysql_password|postgres_password|mongodb_password)\s*=\s*["'](.+?)["']'''
+regex = '''(?i)(?:db_password|database_password|mysql_password|postgres_password|mongodb_password)\s*=\s*["'](.{6,})["']'''
 secretGroup = 1
 tags = ["database", "password", "custom"]
 
@@ -48,6 +55,8 @@ tags = ["encryption", "key", "custom"]
 # Global allowlist to reduce false positives across all rules
 [allowlist]
 description = "Global allowlist for common false positives"
+
+# Paths to exclude from scanning
 paths = [
   '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
   '''(go|py)-lock\.(json|yaml)$''',
@@ -59,8 +68,10 @@ paths = [
   '''^examples/''',
   '''^docs/''',
 ]
+
+# Regex patterns to exclude (be careful with these - they apply globally)
 regexes = [
-  '''(?i)(example|sample|test|demo|dummy|placeholder|fake|mock)''',
+  # Exclude obvious placeholders with asterisks or dots
   '''password\s*=\s*["']\*+["']''',
   '''password\s*=\s*["']\.+["']''',
 ]

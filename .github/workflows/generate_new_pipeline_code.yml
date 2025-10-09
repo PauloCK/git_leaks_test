@@ -1,0 +1,154 @@
+name: Generate Configuration File for New Pipelines
+
+on:
+  workflow_dispatch:
+    inputs:
+      squad:
+        description: 'Squad'
+        required: true
+        type: choice
+        options:
+          - Consignado Privado
+          - Consignado Publico
+          - Martech
+      
+      table_name:
+        description: 'Nome da Tabela a ser Criada (ex: con_funil_oportunidades_app)'
+        required: true
+        type: string
+      
+      rotina:
+        description: 'Frequência de Atualização'
+        required: true
+        type: choice
+        options:
+          - diaria
+          - hora
+      
+      horario_config:
+        description: 'Config Agenda (Separado por Vírgula): hora_inicio,minuto_inicio,hora_fim,frequencia_atualizacao_em_horas (ex: 7,15,20,1)'
+        required: true
+        type: string
+        default: '7,15,20,1'
+      
+      dias_da_semana:
+        description: 'Dias da semana em que a Pipeline Rodará (Separado por Vírgula): segunda,terca,quarta,quinta,sexta,sabado,domingo)'
+        required: true
+        type: string
+        default: 'segunda,terca,quarta,quinta,sexta'
+      
+      serverless:
+        description: 'Serverless'
+        required: true
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+      
+      cluster_config:
+        description: 'Cluster Config: worker_type,driver_type (ex: r6i.4xlarge,r6i.xlarge) - Importante só se serverless=false'
+        required: false
+        type: string
+        default: 'r6i.4xlarge,r6i.xlarge'
+
+jobs:
+  create-pipeline:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Set action name
+        run: echo "ACTION_NAME=Create ${{ github.event.inputs.table_name }} Pipeline" >> $GITHUB_ENV
+      
+      # - name: Check if script exists
+      #   run: |
+      #     ls -la
+      #     ls -la scripts/ || echo "scripts directory not found"
+      #     if [ ! -f "scripts/generate_pipeline.py" ]; then
+      #       echo "❌ Error: scripts/generate_pipeline.py not found!"
+      #       echo "Current directory: $(pwd)"
+      #       echo "Files in current directory:"
+      #       find . -name "generate_pipeline.py"
+      #       exit 1
+      #     fi
+      #     echo "✅ Script found"
+      
+      - name: Generate Pipeline YML
+        id: generate
+        run: |
+          python3 $GITHUB_WORKSPACE/scripts/generate_pipeline_config_file.py \
+            --squad "${{ github.event.inputs.squad }}" \
+            --table-name "${{ github.event.inputs.table_name }}" \
+            --rotina "${{ github.event.inputs.rotina }}" \
+            --horario-config "${{ github.event.inputs.horario_config }}" \
+            --dias-da-semana "${{ github.event.inputs.dias_da_semana }}" \
+            --serverless "${{ github.event.inputs.serverless }}" \
+            --cluster-config "${{ github.event.inputs.cluster_config }}" \
+            > /tmp/generate_output.txt
+          
+          # Parse output
+          FILE_PATH=$(grep "^FILE_PATH=" /tmp/generate_output.txt | cut -d'=' -f2)
+          PIPELINE_NAME=$(grep "^PIPELINE_NAME=" /tmp/generate_output.txt | cut -d'=' -f2)
+          SQUAD=$(grep "^SQUAD=" /tmp/generate_output.txt | cut -d'=' -f2)
+          
+          echo "file_path=$FILE_PATH" >> $GITHUB_OUTPUT
+          echo "pipeline_name=$PIPELINE_NAME" >> $GITHUB_OUTPUT
+          echo "squad=$SQUAD" >> $GITHUB_OUTPUT
+          echo "table_name=${{ github.event.inputs.table_name }}" >> $GITHUB_OUTPUT
+          
+          # Clean up the temporary file
+          rm -f /tmp/generate_output.txt
+      
+      - name: Configure Git
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+      
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "feat: Add pipeline for ${{ steps.generate.outputs.table_name }}"
+          branch: "pipeline/${{ steps.generate.outputs.pipeline_name }}"
+          delete-branch: true
+          title: "New Pipeline: ${{ steps.generate.outputs.pipeline_name }}"
+          body: |
+            ## New Databricks Pipeline Configuration
+            
+            ### Pipeline Details
+            **Table Name:** `${{ steps.generate.outputs.table_name }}`
+            **Pipeline Name:** `${{ steps.generate.outputs.pipeline_name }}`
+            **Squad:** ${{ github.event.inputs.squad }}
+            **Routine:** ${{ github.event.inputs.rotina }}
+            **Serverless:** ${{ github.event.inputs.serverless }}
+            
+            ### Schedule Configuration
+            - **Time Config:** ${{ github.event.inputs.horario_config }}
+            - **Days of Week:** ${{ github.event.inputs.dias_da_semana }}
+            
+            ### Cluster Configuration
+            - **Cluster Config:** ${{ github.event.inputs.cluster_config }}
+            
+            ### File Location
+            📁 `${{ steps.generate.outputs.file_path }}`
+            
+            ---
+            
+            **Created by:** @${{ github.actor }}
+            
+            This PR was automatically generated by the Create Databricks Pipeline workflow.
+            Please review the configuration before merging.
+          labels: |
+            automated
+            pipeline
+            ${{ steps.generate.outputs.squad }}
+          assignees: ${{ github.actor }}
